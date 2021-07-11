@@ -1,6 +1,7 @@
 import configparser
 import socket
 import time
+import re
 
 config = configparser.ConfigParser()
 config.read('twitch.cfg')
@@ -18,11 +19,17 @@ sock.connect((server, port))
 sock.send(f"PASS {token}\n".encode('utf-8'))
 sock.send(f"NICK {nickname}\n".encode('utf-8'))
 sock.send(f"JOIN {channel}\n".encode('utf-8'))
-sock.send("CAP REQ :twitch.tv/tags {}\n".encode("utf-8"))
+sock.send("CAP REQ :twitch.tv/tags\n".encode("utf-8"))
 
+resp = sock.recv(2048).decode('utf-8')
 
 while (True) :
   resp = sock.recv(2048).decode('utf-8')
-
-  print (resp)
-  time.sleep(1)
+  if resp.startswith('PING'):
+    sock.send("PONG :tmi.twitch.tv\r\n".encode('utf-8'))
+    print('pong sent')
+  else:
+    [tags, message] = re.split(':', resp, 1)
+    
+    print(message)
+  time.sleep(0.1)
